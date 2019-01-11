@@ -6,7 +6,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 import android.support.v7.app.ActionBar;
 import android.view.Gravity;
@@ -15,7 +14,6 @@ import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 
 import com.facebook.react.bridge.Callback;
-import com.reactnativenavigation.R;
 import com.reactnativenavigation.animation.VisibilityAnimator;
 import com.reactnativenavigation.params.BaseScreenParams;
 import com.reactnativenavigation.params.ContextualMenuParams;
@@ -163,12 +161,11 @@ public class TopBar extends AppBarLayout {
     }
 
     public void setStyle(StyleParams styleParams) {
-//        if (styleParams.topBarBorderColor.hasColor()) {
-//            setBackground(new TopBarBorder(styleParams));
-//        } else if (styleParams.topBarColor.hasColor()) {
-//            setBackgroundColor(styleParams.topBarColor.getColor());
-//        }
-        setBackground(ContextCompat.getDrawable(getContext(), R.drawable.gradient));
+        if (styleParams.topBarBorderColor.hasColor()) {
+            setBackground(new TopBarBorder(styleParams));
+        } else if (styleParams.topBarColor.hasColor()) {
+            setBackgroundColor(styleParams.topBarColor.getColor());
+        }
         if (styleParams.topBarTransparent) {
             setTransparent();
         }
