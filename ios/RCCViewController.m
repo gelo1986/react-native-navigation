@@ -38,18 +38,6 @@ const NSInteger TRANSPARENT_NAVBAR_TAG = 78264803;
     return _navBarHairlineImageView;
 }
 
-- (UIImage *)imageFromLayer:(CALayer *)layer
-{
-    UIGraphicsBeginImageContextWithOptions(layer.frame.size, NO, 0);
-    
-    [layer renderInContext:UIGraphicsGetCurrentContext()];
-    UIImage *outputImage = UIGraphicsGetImageFromCurrentImageContext();
-    
-    UIGraphicsEndImageContext();
-    
-    return outputImage;
-}
-
 + (UIViewController*)controllerWithLayout:(NSDictionary *)layout globalProps:(NSDictionary *)globalProps bridge:(RCTBridge *)bridge {
     UIViewController* controller = nil;
     if (!layout) return nil;
@@ -218,6 +206,7 @@ const NSInteger TRANSPARENT_NAVBAR_TAG = 78264803;
 
 - (void)sendScreenChangedEvent:(NSString *)eventName {
     if ([self.view isKindOfClass:[RCTRootView class]]) {
+        
         RCTRootView *rootView = (RCTRootView *)self.view;
         
         if (rootView.appProperties && rootView.appProperties[@"navigatorEventID"]) {
@@ -233,8 +222,8 @@ const NSInteger TRANSPARENT_NAVBAR_TAG = 78264803;
 
 - (void)sendGlobalScreenEvent:(NSString *)eventName endTimestampString:(NSString *)endTimestampStr shouldReset:(BOOL)shouldReset {
     if ([self.view isKindOfClass:[RCTRootView class]]){
-        NSString *screenName = [((RCTRootView *)self.view) moduleName];
-
+        NSString *screenName = [((RCTRootView*)self.view) moduleName];
+        
         [[[RCCManager sharedInstance] getBridge].eventDispatcher sendAppEventWithName:eventName body:@
          {
              @"commandType": self.commandType ? self.commandType : @"",
@@ -340,22 +329,8 @@ const NSInteger TRANSPARENT_NAVBAR_TAG = 78264803;
     NSString *navBarBackgroundColor = self.navigatorStyle[@"navBarBackgroundColor"];
     if (navBarBackgroundColor) {
         
-//        UIColor *color = navBarBackgroundColor != (id)[NSNull null] ? [RCTConvert UIColor:navBarBackgroundColor] : nil;
-//        viewController.navigationController.navigationBar.barTintColor = color;
-        
-        // MARK: - Custom hard code
-        CAGradientLayer *gradient = [CAGradientLayer layer];
-        gradient.frame = viewController.navigationController.navigationBar.bounds;
-        gradient.colors = [NSArray arrayWithObjects:
-                           (id)([UIColor colorWithRed:0.58984375 green:0.078125 blue:0.58984375 alpha:1.000].CGColor),
-                           (id)([UIColor colorWithRed:0.89 green:0.1171875 blue:0.34375 alpha:1.000].CGColor),
-                           nil];
-        gradient.startPoint = CGPointMake(0.0, 0.5);
-        gradient.endPoint = CGPointMake(1.0, 0.5);
-        
-        UIImage *bgImage = [self imageFromLayer:gradient];
-        [viewController.navigationController.navigationBar setBackgroundImage:bgImage forBarMetrics:UIBarMetricsDefault];
-        viewController.navigationController.navigationBar.barTintColor = nil;
+        UIColor *color = navBarBackgroundColor != (id)[NSNull null] ? [RCTConvert UIColor:navBarBackgroundColor] : nil;
+        viewController.navigationController.navigationBar.barTintColor = color;
         
     } else {
         viewController.navigationController.navigationBar.barTintColor = nil;
@@ -560,15 +535,14 @@ const NSInteger TRANSPARENT_NAVBAR_TAG = 78264803;
         }
     };
     
-    if (!self.transitionCoordinator || self.transitionCoordinator.initiallyInteractive || !navBarTransparentBool || appeared || [self isModal]) {
+    if (!self.transitionCoordinator || self.transitionCoordinator.initiallyInteractive || !navBarTransparentBool || appeared) {
         action();
     } else {
         UIView* backgroundView = [self.navigationController.navigationBar valueForKey:@"backgroundView"];
         CGFloat originalAlpha = backgroundView.alpha;
         backgroundView.alpha = navBarTransparentBool ? 0.0 : 1.0;
-        [self.transitionCoordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+        [self.transitionCoordinator animateAlongsideTransition:nil completion:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
             action();
-        } completion:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
             backgroundView.alpha = originalAlpha;
         }];
     }
@@ -645,6 +619,10 @@ const NSInteger TRANSPARENT_NAVBAR_TAG = 78264803;
         }
     }
     
+    // [self processTitleView:viewController
+    //                  props:self.navigatorStyle
+    //                  style:self.navigatorStyle];
+    
 #if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_10_3
     if (@available(iOS 11.0, *)) {
         if ([self.navigationController.navigationBar respondsToSelector:@selector(setPrefersLargeTitles:)]) {
@@ -664,17 +642,6 @@ const NSInteger TRANSPARENT_NAVBAR_TAG = 78264803;
         }
     }
 #endif
-}
-
-- (BOOL)isModal {
-    if([self presentingViewController])
-        return YES;
-    if([[[self navigationController] presentingViewController] presentedViewController] == [self navigationController])
-        return YES;
-    if([[[self tabBarController] presentingViewController] isKindOfClass:[UITabBarController class]])
-        return YES;
-    
-    return NO;
 }
 
 -(void)processTitleView:(UIViewController*)viewController
